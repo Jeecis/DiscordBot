@@ -6,14 +6,14 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from dataclasses import dataclass
 from WebScraping import Scraper
+from news import News
 from gpt import AI
 import typing
 import functools
 import asyncio
+from fixblocking import NoBlock
 
-load_dotenv()
-
-BOT_TOKEN = str(os.getenv("BOTTOKEN"))
+BOT_TOKEN = os.environ["DISCORD_API_KEY"]
 # BOT_TOKEN = "MTE0NjE2MTgyODgwNDY5NDA4Ng.Gj1_IV.jPzDVmIvOJEDg9h0gZfMS9lT5Fk7TK_0vemUX4"
 # print(BOT_TOKEN)
 CHANNEL_ID = 996336625556652102
@@ -26,25 +26,34 @@ class Session:
     start_time: int = 0
 
 
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
-
-intents = discord.Intents.default()
-intents.message_content = True
-client = discord.Client(intents=intents)
+bot = commands.Bot(command_prefix="/", intents=discord.Intents.all())
 
 
 # session =Session()
 
+@bot.command()
+async def sync(ctx: commands.Context, guild: discord.Guild = None) -> None:
+    print("Syncing commands")
+    sync=0
+    if guild is None:
+        print("Guild is None")
+        sync=len(await bot.tree.sync())
+    else:
+        print("Guild found")
+        sync=len(await bot.tree.sync(guild=guild))
 
+    print(f"Synced {sync} command(s)")
+
+@bot.event
 async def on_ready():
     print("Is ready!")
     channel = bot.get_channel(CHANNEL_ID)
     await channel.send("Wussup")
-    try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} command(s)")
-    except Exception as e:
-        print(e)
+    # try:
+    #     synced = await bot.tree.sync(guild=discord.Object(850296892347777036))
+    #     print(f"Synced {len(synced)} command(s)")
+    # except Exception as e:
+    #     print(e)
 
 
 @bot.tree.command(name="news")
@@ -62,23 +71,22 @@ async def get_news(link, channel_id):
     return string
 
 
-@bot.tree.command(name="ai")
-async def ai(interaction: discord.Interaction, prompt: str):
+@bot.tree.command(name="stocknews")
+async def stocknews(interaction: discord.Interaction, prompt: str):
     try:
 
         await interaction.response.send_message("Please wait...", ephemeral=True)
         channel = bot.get_channel(interaction.channel.id)
 
-        task = asyncio.create_task(run_ai(prompt, interaction.channel.id))
-        result=await task
+        result = await newsAPI(prompt, interaction.channel.id)
         print(result)
         await interaction.delete_original_response()
 
-        embed = discord.Embed(title="Author: "+interaction.user.name, colour=discord.Colour(0x3e038c))
+        embed = discord.Embed(title="Author: " + interaction.user.name, colour=discord.Colour(0x3e038c))
 
-        embed.add_field(name="Prompt:", value=prompt, inline=False)
+        embed.add_field(name="Coefficient:", value=result, inline=False)
         await channel.send(embed=embed)
-        await channel.send(f"{interaction.user.mention} "+result)
+        await channel.send(f"{interaction.user.mention} " + result)
 
         #
         # msg = await interaction.edit_original_response()
@@ -90,20 +98,53 @@ async def ai(interaction: discord.Interaction, prompt: str):
         # Handle other exceptions
         print(f"An error occurred: {e}")
 
-def to_thread(func: typing.Callable) -> typing.Coroutine:
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        return await asyncio.to_thread(func, *args, **kwargs)
-    return wrapper
 
-@to_thread
+@bot.tree.command(name="ai")
+async def ai(interaction: discord.Interaction, prompt: str):
+    try:
+
+        await interaction.response.send_message("Please wait...", ephemeral=True)
+        channel = bot.get_channel(interaction.channel.id)
+
+        task = asyncio.create_task(run_ai(prompt, interaction.channel.id))
+        result = await task
+        print(result)
+        await interaction.delete_original_response()
+
+        embed = discord.Embed(title="Author: " + interaction.user.name, colour=discord.Colour(0x3e038c))
+
+        embed.add_field(name="Prompt:", value=prompt, inline=False)
+        await channel.send(embed=embed)
+        await channel.send(f"{interaction.user.mention} " + result)
+
+        #
+        # msg = await interaction.edit_original_response()
+        # await msg.edit(content=result)
+    except discord.errors.NotFound:
+        # Handle NotFound error
+        print("Interaction not found or expired.")
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {e}")
+
+@NoBlock.to_thread
 def run_ai(prompt, channel_id):
     ai_chat = AI(prompt)
     string = ai_chat.askAI()
     channel = bot.get_channel(channel_id)
     return string
 
-
+@tasks.loop(minutes=1)
+async def newsAPI(prompt, channel_id):
+    news_obj = News(prompt)
+    resp = await news_obj.getNews()
+    channel = bot.get_channel(channel_id)
+    return resp
 
 
 bot.run(BOT_TOKEN)
+
+
+
+
+
