@@ -7,7 +7,7 @@ import asyncio
 class NoBlock:
 
     def to_thread(func: typing.Callable) -> typing.Coroutine:
-        @functools.wraps(func)
+        # @functools.wraps(func)
         async def wrapper(*args, **kwargs):
             return await asyncio.to_thread(func, *args, **kwargs)
 
