@@ -45,30 +45,51 @@ Most importantly, a very challenging part was learning more about pythons OOP, c
 ### Bot commands
 
 AI:
+
 /ai - chat with chatGPT
 
+
 Stocks:
+
 /addstock - adds stock to track
+
 /getprice - get price of any stock
+
 /startstockloop - the bot will start looping through stock news and provide coefficient in the interval from -1 to 1 on whether you should invest in the stock that's being tracked
+
 /stopstockloop - the bot will stop the stock loop
 
+
 News (works only on few specific websites such as delfi.lv or lsm.lv):
+
 /addnews - sets news website to track
+
 /news - get the latest news
+
 /startnewsloop - the bot will start looping through news and print the latest news every hour
+
 /stopnewsloop - the bot will stop looping through news 
 
+
 Hidden commands (not meant to be executed by every user):
+
 /sync - syncs all the bot.tree commands
+
 /setCID - sets the channel ID where the bot should send messages
+
 
 ### How to test it
 Since hosting a discord bot with gpt integration isn't cheap the steps will be more complicated.
 
-Firstly, you will have to set your own API keys in environmental variables, but I will just provide the API key names mentioned in my program and to which API they are related:
+Download this projects file and open it in your favourite IDE (Pycharm or Vscode)
+
+You will have to set your own API keys in environmental variables, but I will just provide the API key names mentioned in my program and to which API they are related:
+
 For OpenAI API - OPENAI_API_KEY
+
 For Alphavantage news API - NEWS_API_KEY
-For Discord bot API - DISCORD_API_KEY
+
+For Discord bot API - DISCORD_API_KEY (for this you will have to create your own discord bot)
+
 
 After setting the API keys you should be set and just run the program ;)
