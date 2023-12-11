@@ -7,6 +7,11 @@ from gpt import AI
 import typing
 from fixblocking import NoBlock
 import asyncio
+import yfinance as yf
+
+
+
+# get all stock info
 
 class News:
 
@@ -15,10 +20,6 @@ class News:
         self.stock=""
         self.ai=AI(prompt=self.prompt)
 
-    def getStock(self):
-        stockName= self.ai.stockName()
-        print(stockName)
-        return stockName
 
     @NoBlock.to_thread
     def parseJSON(self, json):
@@ -41,34 +42,51 @@ class News:
         print("Total coefficient: "+str(totalCoef))
         return str(totalCoef)
 
+    def getStock(self):
+        try:
+            stock1=yf.Ticker(self.prompt)
+            price=stock1.info["currentPrice"]
+            self.stock = self.prompt
+            return self.prompt.upper()
+        except:
+            stock2 = self.ai.stockName()
+            try:
+                check = yf.Ticker(stock2)
+                price = check.info["currentPrice"]
+            except:
+                return -1
+            print(stock2)
+            return stock2
+
+    def getStockPrice(self):
+        price=0
+        try:
+            stock1=yf.Ticker(self.prompt)
+            price=stock1.info["currentPrice"]
+            self.stock = self.prompt
+            return [self.stock,price]
+        except:
+            stock2 = self.ai.stockName()
+            try:
+                check = yf.Ticker(stock2)
+                price = check.info["currentPrice"]
+            except:
+                return -1
+            print(stock2)
+            return [stock2,price]
+
+
     async def getNews(self):
-        api = os.getenv("NEWS_API_KEY")
-        url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={self.prompt}&apikey={api}'
-        r = requests.get(url)
-        data = r.json()
-        print(data)
-
-        if 'Information' in data:
-
-            stock = self.getStock()
-            print(stock)
+        stock=self.getStock()
+        if not stock == -1:
+            api = os.getenv("NEWS_API_KEY")
+            # api="demo"
             url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={stock}&apikey={api}'
             r = requests.get(url)
             data = r.json()
-
-            if "Information" in data:
-                return "Stock name not found"
-
-            task= asyncio.create_task(self.parseJSON(data))
-            res = await task
-            self.stock=stock
-            return res
-
-        else:
-
-            self.stock = self.prompt
-            print(self.stock)
+            print(data)
             task = asyncio.create_task(self.parseJSON(data))
             res = await task
             return res
+
 
