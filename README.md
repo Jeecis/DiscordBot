@@ -58,3 +58,17 @@ News (works only on few specific websites such as delfi.lv or lsm.lv):
 /news - get the latest news
 /startnewsloop - the bot will start looping through news and print the latest news every hour
 /stopnewsloop - the bot will stop looping through news 
+
+Hidden commands (not meant to be executed by every user):
+/sync - syncs all the bot.tree commands
+/setCID - sets the channel ID where the bot should send messages
+
+### How to test it
+Since hosting a discord bot with gpt integration isn't cheap the steps will be more complicated.
+
+Firstly, you will have to set your own API keys in environmental variables, but I will just provide the API key names mentioned in my program and to which API they are related:
+For OpenAI API - OPENAI_API_KEY
+For Alphavantage news API - NEWS_API_KEY
+For Discord bot API - DISCORD_API_KEY
+
+After setting the API keys you should be set and just run the program ;)
